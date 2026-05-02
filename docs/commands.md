@@ -6,13 +6,25 @@
 
 ## herm — 多 Agent 管理
 
-`herm` 是统一入口脚本 (`~/bin/herm`)，管理 wiki/qa/coco 三个 agent 的 tmux 生命周期。
+`herm` 是统一入口脚本 (`~/bin/herm`)，管理 pm/qa/coco/wiki 四个 agent 的 tmux 生命周期。
 
 ### 状态
 
 ```bash
 herm status          # 查看所有 agent 运行状态
 ```
+
+### pm-agent（执行调度）
+
+```bash
+herm pm-start         # 启动
+herm pm-stop          # 停止
+herm pm-ask <任务>     # 发送调度任务
+herm pm-log [行数]     # 查看最近输出（默认 30 行）
+herm pm-attach        # 进入交互终端（Ctrl+B D 退出）
+```
+
+tmux session: `pm-agent` / 模型: `deepseek-v4-flash`
 
 ### wiki-agent（知识库）
 
@@ -86,10 +98,11 @@ agent-status          # 显示 agent session + 状态文件 + 活跃 .task
 
 ```bash
 tmux list-sessions                    # 列出所有 session
+tmux attach -t pm-agent               # 进入 pm-agent
 tmux attach -t wiki-agent             # 进入 wiki-agent
 tmux attach -t qa-agent               # 进入 qa-agent
 tmux attach -t coco-agent             # 进入 coco-agent
-tmux kill-session -t wiki-agent       # 强制停止 wiki-agent
+tmux kill-session -t pm-agent         # 强制停止 pm-agent
 tmux capture-pane -t qa-agent -p -S -50  # 捕获最近 50 行
 ```
 
@@ -99,6 +112,7 @@ tmux capture-pane -t qa-agent -p -S -50  # 捕获最近 50 行
 
 | Agent | Profile | tmux Session | 模型 |
 |-------|---------|-------------|------|
+| pm-agent | pm-agent | pm-agent | deepseek-v4-flash |
 | wiki-agent | wiki-agent | wiki-agent | deepseek-v4-flash |
 | qa-agent | qa-agent | qa-agent | deepseek-v4-flash |
 | coco-agent | coco-agent | coco-agent | deepseek-v4-pro |
@@ -110,20 +124,20 @@ tmux capture-pane -t qa-agent -p -S -50  # 捕获最近 50 行
 ### 启动全部
 
 ```bash
-herm wiki-start && herm qa-start && herm coco-start
+herm pm-start && herm qa-start && herm coco-start && herm wiki-start
 ```
 
-### 发任务（⚠️ 一条消息包全部，不拆多行）
+### 小艾派任务给 PM-agent
 
 ```bash
-herm qa-ask "审查 TASK_SPEC.md 字段设计，重点检查必填/可选区分"
+herm pm-ask "实现 Issue #1 的 AUTOSAR 编译流程，需要编码和审查"
 ```
 
 ### 验收
 
 ```bash
-cat /tmp/hermes-qa-*.status    # 查看通知
-herm qa-log 50                 # 查看输出
+cat /tmp/hermes-pm-*.status    # 查看 PM-agent 汇总通知
+herm pm-log 50                 # 查看调度日志
 ```
 
 ### 日常检查
@@ -140,6 +154,7 @@ herm status && agent-status
 |------|------|
 | herm 脚本 | `~/bin/herm` |
 | agent-status 脚本 | `~/.hermes/scripts/agent_status.py` |
+| pm-agent profile | `~/.hermes/profiles/pm-agent/` |
 | wiki-agent profile | `~/.hermes/profiles/wiki-agent/` |
 | qa-agent profile | `~/.hermes/profiles/qa-agent/` |
 | coco-agent profile | `~/.hermes/profiles/coco-agent/` |
@@ -153,6 +168,7 @@ herm status && agent-status
 ## 注意事项
 
 - ⚠️ tmux send-keys 连续发多条消息会互相打断 → 一条消息包含全部上下文
-- ⚠️ agent 完成后写 `/tmp/hermes-{name}-{task_id}.status` 通知小艾
+- ⚠️ agent 完成后写 `/tmp/hermes-{name}-{task_id}.status` 通知
+- ⚠️ PM-agent 汇总后写 `/tmp/hermes-pm-{task_id}.status` 通知小艾
 - ⚠️ agent 的 state.db 必须用 `hermes profile create --clone-from default` 后替换，防身份混淆
 - ⚠️ 新建 agent 前必加载 `persistent-subagent` skill

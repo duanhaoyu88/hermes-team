@@ -7,11 +7,11 @@
 ## 团队架构
 
 ```
-小艾 (PM/架构师)
-  ├── QA Agent (质量守门人) ← 待搭建
-  ├── wiki-agent (知识库)
-  ├── coco-agent (编码)
-  └── delegate_task (一次性审查/编码)
+小艾 (架构师)
+  └── PM-agent (执行调度者)
+        ├── QA Agent (质量守门人)
+        ├── coco-agent (编码)
+        └── wiki-agent (知识库)
 ```
 
 ## 当前 Agent 清单
@@ -19,9 +19,10 @@
 | Agent | 状态 | Profile | 触发方式 |
 |-------|------|---------|---------|
 | 小艾 | ✅ 运行中 | ~/.hermes/ | CLI/微信 |
-| wiki-agent | ✅ 运行中 | ~/.hermes/profiles/wiki-agent/ | tmux |
-| coco-agent | ✅ 运行中 | ~/.hermes/profiles/coco-agent/ | delegate_task |
-| QA Agent | ⏳ 待搭建 | ~/.hermes/profiles/qa-agent/ | tmux/delegate_task |
+| PM-agent | ✅ 运行中 | ~/.hermes/profiles/pm-agent/ | tmux (小艾派发) |
+| QA Agent | ✅ 运行中 | ~/.hermes/profiles/qa-agent/ | tmux (PM-agent派发) |
+| coco-agent | ✅ 运行中 | ~/.hermes/profiles/coco-agent/ | tmux (PM-agent派发) |
+| wiki-agent | ✅ 运行中 | ~/.hermes/profiles/wiki-agent/ | tmux (PM-agent派发) |
 
 ## 目录结构
 
@@ -29,9 +30,10 @@
 docs/
 ├── agents/
 │   ├── xiao-ai.md       ← 小艾：角色、SOUL、skill、工作空间
+│   ├── pm-agent.md      ← PM-agent：调度、闭环、进度追踪
 │   ├── wiki-agent.md    ← wiki-agent：角色、skill、工作空间
 │   ├── coco-agent.md    ← coco-agent：角色、skill、工作空间
-│   └── qa-agent.md      ← QA agent：角色定义（待设计）
+│   └── qa-agent.md      ← QA agent：审查、方案评估
 ├── protocols/
 │   ├── communication.md ← 通信协议矩阵
 │   └── onboarding.md    ← 新 agent 加入流程
