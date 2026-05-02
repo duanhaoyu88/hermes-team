@@ -14,17 +14,6 @@
 herm status          # 查看所有 agent 运行状态
 ```
 
-输出示例:
-```
-┌─────────────────────────────────┐
-│      Hermes 多 Agent 状态         │
-├──────────┬──────────────────────┤
-│ wiki-agent │ ✅ 运行中              │
-│ qa-agent   │ ❌ 未运行              │
-│ coco-agent │ ❌ 未运行              │
-└──────────┴──────────────────────┘
-```
-
 ### wiki-agent（知识库）
 
 ```bash
@@ -35,7 +24,7 @@ herm wiki-log [行数]   # 查看最近输出（默认 30 行）
 herm wiki-attach      # 进入交互终端（Ctrl+B D 退出）
 ```
 
-tmux session 名: `hermes-wiki`
+tmux session: `wiki-agent`
 
 ### qa-agent（审查）
 
@@ -47,8 +36,7 @@ herm qa-log [行数]     # 查看最近输出
 herm qa-attach        # 进入交互终端
 ```
 
-模型: `deepseek-v4-flash`（轻量审查）
-tmux session 名: `qa-agent`
+tmux session: `qa-agent` / 模型: `deepseek-v4-flash`
 
 ### coco-agent（编码）
 
@@ -60,8 +48,7 @@ herm coco-log [行数]   # 查看最近输出
 herm coco-attach      # 进入交互终端
 ```
 
-模型: `deepseek-v4-pro`（编码需高质量）
-tmux session 名: `coco-agent`
+tmux session: `coco-agent` / 模型: `deepseek-v4-pro`
 
 ### 全局
 
@@ -93,67 +80,50 @@ hermes cron list      # 查看定时任务
 agent-status          # 显示 agent session + 状态文件 + 活跃 .task
 ```
 
-输出示例:
-```
-◆ Agent Sessions
-  🟢 wiki-agent      running
-  🔴 qa-agent        DOWN
-
-◆ Last Status Files
-  qa-agent        2026-05-02T07:35  Pilot对比完成
-
-◆ Active Tasks
-  📋 hermes-team-3   [assigned]     qa-agent     QA Agent 完整 SOUL 定义
-```
-
 ---
 
 ## tmux 直接操作（高级）
 
 ```bash
 tmux list-sessions                    # 列出所有 session
-tmux attach -t hermes-wiki            # 进入 wiki-agent
+tmux attach -t wiki-agent             # 进入 wiki-agent
 tmux attach -t qa-agent               # 进入 qa-agent
 tmux attach -t coco-agent             # 进入 coco-agent
-tmux kill-session -t hermes-wiki      # 强制停止 wiki-agent
-tmux capture-pane -t qa-agent -p -S -50  # 捕获 qa-agent 最近 50 行
+tmux kill-session -t wiki-agent       # 强制停止 wiki-agent
+tmux capture-pane -t qa-agent -p -S -50  # 捕获最近 50 行
 ```
+
+---
+
+## Session / Profile 对照
+
+| Agent | Profile | tmux Session | 模型 |
+|-------|---------|-------------|------|
+| wiki-agent | wiki-agent | wiki-agent | deepseek-v4-flash |
+| qa-agent | qa-agent | qa-agent | deepseek-v4-flash |
+| coco-agent | coco-agent | coco-agent | deepseek-v4-pro |
 
 ---
 
 ## 常用工作流
 
-### 启动全部 agent
+### 启动全部
 
 ```bash
 herm wiki-start && herm qa-start && herm coco-start
 ```
 
-### 给 agent 发任务
+### 发任务（⚠️ 一条消息包全部，不拆多行）
 
 ```bash
-# 单条消息（⚠️ 不要拆成多条，会互相打断）
-herm qa-ask "审查 TASK_SPEC.md 的字段设计，重点关注必填/可选区分"
-
-# 通过 /tmp 文件批量注入上下文
-cat > /tmp/qa-context.txt << 'EOF'
-任务文件: ~/.hermes/projects/autosar-1.task
-审查维度: 状态机完整性、边界条件、验收标准可测性
-EOF
-herm qa-ask "读 /tmp/qa-context.txt，按三维度审查并写 /tmp/hermes-qa.status"
+herm qa-ask "审查 TASK_SPEC.md 字段设计，重点检查必填/可选区分"
 ```
 
-### 验收 agent 完成
+### 验收
 
 ```bash
-# 1. 查看通知文件
-cat /tmp/hermes-qa-*.status
-
-# 2. 查看 agent 输出
-herm qa-log 50
-
-# 3. 进交互终端细看
-herm qa-attach
+cat /tmp/hermes-qa-*.status    # 查看通知
+herm qa-log 50                 # 查看输出
 ```
 
 ### 日常检查
@@ -180,21 +150,9 @@ herm status && agent-status
 
 ---
 
-## 模型分配
-
-| Agent | 模型 | 原因 |
-|-------|------|------|
-| 小艾 (PM) | deepseek-v4-pro | 决策/分配/验收需高质量 |
-| QA agent | deepseek-v4-flash | 审查以量为主，快速迭代 |
-| wiki-agent | deepseek-v4-flash | 知识搬运/转换，机械操作 |
-| coco-agent | deepseek-v4-pro | 编码需精确，一次写对 |
-
----
-
 ## 注意事项
 
 - ⚠️ tmux send-keys 连续发多条消息会互相打断 → 一条消息包含全部上下文
 - ⚠️ agent 完成后写 `/tmp/hermes-{name}-{task_id}.status` 通知小艾
 - ⚠️ agent 的 state.db 必须用 `hermes profile create --clone-from default` 后替换，防身份混淆
 - ⚠️ 新建 agent 前必加载 `persistent-subagent` skill
-- ⚠️ `vim`/`nano` 等交互编辑器在 tmux 里可用，`Ctrl+B D` detach 后不会中断
