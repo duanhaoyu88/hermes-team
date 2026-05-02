@@ -16,13 +16,15 @@
 
 ## 当前 Agent 清单
 
-| Agent | 状态 | Profile | 触发方式 |
+| Agent | 配置 | Profile | 触发方式 |
 |-------|------|---------|---------|
-| 小艾 | ✅ 运行中 | ~/.hermes/ | CLI/微信 |
-| PM-agent | ✅ 运行中 | ~/.hermes/profiles/pm-agent/ | tmux (小艾派发) |
-| QA Agent | ✅ 运行中 | ~/.hermes/profiles/qa-agent/ | tmux (PM-agent派发) |
-| coco-agent | ✅ 运行中 | ~/.hermes/profiles/coco-agent/ | tmux (PM-agent派发) |
-| wiki-agent | ✅ 运行中 | ~/.hermes/profiles/wiki-agent/ | tmux (PM-agent派发) |
+| 小艾 | ✅ | ~/.hermes/ | CLI/微信 |
+| PM-agent | ✅ | ~/.hermes/profiles/pm-agent/ | tmux (小艾派发) |
+| QA Agent | ✅ | ~/.hermes/profiles/qa-agent/ | tmux (PM-agent派发) |
+| coco-agent | ✅ | ~/.hermes/profiles/coco-agent/ | tmux (PM-agent派发) |
+| wiki-agent | ✅ | ~/.hermes/profiles/wiki-agent/ | tmux (PM-agent派发) |
+
+> 运行状态用 `herm status` 查看。
 
 ## 目录结构
 
