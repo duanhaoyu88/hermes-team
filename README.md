@@ -27,6 +27,7 @@
 
 ## 关联
 
+- **Skill 管控**: [skills/](./skills/)（中心清单 + 索引 + 部署脚本）
 - 治理规则: [hermes-governance](https://github.com/duanhaoyu88/hermes-governance)
 - 项目管控: [hermes-project-control](https://github.com/duanhaoyu88/hermes-project-control)
 - 知识库: `/mnt/f/04_Obsidian/`
