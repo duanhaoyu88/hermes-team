@@ -25,7 +25,16 @@ done
 [ -n "$SKILL_NAME" ] || { echo "用法: $0 --add --skill <name> [--dry-run|--apply]"; exit 1; }
 [ "$DRY_RUN" -eq 1 ] || [ "$APPLY" -eq 1 ] || { echo "需要 --dry-run 或 --apply"; exit 1; }
 
-# 查找 skill 源
+get_profiles_dir() {
+  local d="$HOME/.hermes/profiles"
+  if [ ! -d "$d" ]; then
+    local rh
+    rh=$(python3 -c "import pwd, os; print(pwd.getpwuid(os.getuid()).pw_dir)" 2>/dev/null || echo "/home/$USER")
+    d="$rh/.hermes/profiles"
+  fi
+  echo "$d"
+}
+
 find_source() {
   local name="$1"
   # 1. hermes-team/skills/<name>/ 目录
@@ -34,11 +43,8 @@ find_source() {
     return
   fi
   # 2. 扫描 agent profiles 找已有副本
-  local profiles="/home/duanhaoyu/.hermes/profiles"
-  if [ ! -d "$profiles" ]; then
-    REAL_HOME=$(python3 -c "import pwd, os; print(pwd.getpwuid(os.getuid()).pw_dir)" 2>/dev/null || echo "/home/$USER")
-    profiles="$REAL_HOME/.hermes/profiles"
-  fi
+  local profiles
+  profiles=$(get_profiles_dir)
   for pd in "$profiles"/*/; do
     [ -d "$pd" ] || continue
     local found
@@ -60,7 +66,6 @@ fi
 
 echo "Skill 源: $SOURCE"
 
-# 读 roles 列表
 ROLES=$(python3 -c "
 import yaml, json
 with open('$INDEX_FILE') as f:
@@ -81,16 +86,12 @@ fi
 echo "目标角色: $ROLES"
 echo ""
 
-PROFILES_DIR="/home/duanhaoyu/.hermes/profiles"
-if [ ! -d "$PROFILES_DIR" ]; then
-  REAL_HOME=$(python3 -c "import pwd, os; print(pwd.getpwuid(os.getuid()).pw_dir)" 2>/dev/null || echo "/home/$USER")
-  PROFILES_DIR="$REAL_HOME/.hermes/profiles"
-fi
-
+PROFILES_DIR=$(get_profiles_dir)
 COPIED=0
 SKIPPED=0
+IFS=' ' read -ra ROLE_LIST <<< "$ROLES"
 
-for role in $ROLES; do
+for role in "${ROLE_LIST[@]}"; do
   agent="${role}-agent"
   target="$PROFILES_DIR/$agent/skills/$SKILL_NAME"
 
@@ -104,6 +105,11 @@ for role in $ROLES; do
   if [ "$APPLY" -eq 1 ]; then
     mkdir -p "$(dirname "$target")"
     cp -r "$SOURCE" "$target"
+    if [ ! -f "$target/SKILL.md" ]; then
+      echo "  ❌ $agent: 复制失败 — SKILL.md 缺失"
+      exit 1
+    fi
+    echo "  ✅ $agent: 已部署"
   fi
   COPIED=$((COPIED + 1))
 done
