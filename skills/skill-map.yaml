@@ -55,7 +55,7 @@ skills:
     when: "提交代码审查前自查"
     description: "提交前自查清单 — 安全检查/代码规范/文档完整性"
     tags: [code-review, checklist]
-    roles: [qa, coco]
+    roles: [coco]
 
   # ── Coco ──
   - name: test-driven-development
