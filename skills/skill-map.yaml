@@ -1,7 +1,7 @@
 # Skill Map — Hermes Agent 技能映射表
 # 唯一源。PM 维护。skill-index.yaml 由此自动生成。
 schema_version: "1.0"
-last_updated: 2026-05-03
+last_updated: "2026-05-03"
 maintainer: pm-agent
 
 skills:
