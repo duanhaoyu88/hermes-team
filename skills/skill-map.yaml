@@ -31,7 +31,7 @@ skills:
     version: ">=1.0"
     source: hermes-governance
     required: true
-    load: auto
+    load: manual
     when: "收到设计文档审查任务时加载"
     description: "架构设计文档审查 — 五层影响分析/风险/验收标准"
     tags: [design, review, architecture]
@@ -41,7 +41,7 @@ skills:
     version: ">=1.0"
     source: hermes-governance
     required: true
-    load: auto
+    load: manual
     when: "遇到 bug 或异常行为时加载"
     description: "系统性调试方法论 — 根因分析/二分法/日志追踪"
     tags: [debug, troubleshooting]
