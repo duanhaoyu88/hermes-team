@@ -1,129 +1,156 @@
 #!/usr/bin/env bash
-# deploy-skills.sh — 根据 skill-index.yaml 清理各 agent profile skills 目录
-# 仅保留 auto/manual 列表中的 skill，其余备份后删除。
-#
+# deploy-skills.sh — 按 skill-index.yaml 清理 agent profile 的过期 skill
 # 用法:
-#   bash deploy-skills.sh                    → 执行清理
-#   bash deploy-skills.sh --dry-run          → 只预览不下手
-#   bash deploy-skills.sh --restore <backup> → 从备份恢复
+#   bash deploy-skills.sh                 → 列出待删 skill + 提示确认后备份删除
+#   bash deploy-skills.sh --dry-run       → 只列出要删的，不下手
+#   bash deploy-skills.sh --index path    → 自定义 skill-index.yaml 路径
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-INDEX_FILE="$SCRIPT_DIR/../skill-index.yaml"
-SKILLS_BASE="$HOME/.hermes/profiles"
-BACKUP_DIR="$HOME/.hermes/skills-backup-$(date +%Y%m%d_%H%M%S)"
+DEFAULT_INDEX="$SCRIPT_DIR/../skill-index.yaml"
 DRY_RUN=0
+INDEX_FILE="$DEFAULT_INDEX"
+BACKUP_DIR="$HOME/.hermes/skills-backup-$(date +%Y%m%d)"
+PROFILES_DIR="$HOME/.hermes/profiles"
+
+# $HOME 可能被 profile 路径覆盖
+if [ ! -d "$PROFILES_DIR" ]; then
+  REAL_HOME=$(python3 -c "import pwd, os; print(pwd.getpwuid(os.getuid()).pw_dir)" 2>/dev/null || echo "/home/$USER")
+  PROFILES_DIR="$REAL_HOME/.hermes/profiles"
+  BACKUP_DIR="$REAL_HOME/.hermes/skills-backup-$(date +%Y%m%d)"
+fi
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --dry-run) DRY_RUN=1; shift ;;
-    --restore) echo "恢复功能: tar -xzf \"$2\" -C /"; exit 0; shift 2 ;;
-    *) echo "用法: $0 [--dry-run] [--restore <backup>]"; exit 1 ;;
+    --index) INDEX_FILE="$2"; shift 2 ;;
+    *) echo "未知参数: $1"; exit 1 ;;
   esac
 done
 
-if [ ! -f "$INDEX_FILE" ]; then
-  echo "❌ skill-index.yaml 不存在: $INDEX_FILE" >&2
-  exit 1
-fi
+[ -f "$INDEX_FILE" ] || { echo "索引不存在: $INDEX_FILE"; exit 1; }
+[ -d "$PROFILES_DIR" ] || { echo "profiles 不存在: $PROFILES_DIR"; exit 1; }
 
-# ── 解析 skill-index.yaml，获取每个角色的 skill 列表 ──
-parse_index() {
+# 获取角色的允许 skill（auto+manual）
+get_allowed() {
   python3 -c "
-import yaml, sys
+import yaml, json
 with open('$INDEX_FILE') as f:
-    data = yaml.safe_load(f)
-roles = data.get('roles', {})
-for role, levels in roles.items():
-    allowed = set()
-    for level in ['auto', 'manual']:
-        for s in levels.get(level, []):
-            allowed.add(s)
-    print(f'{role}:{\",\".join(sorted(allowed))}')" 2>/dev/null
+    d = yaml.safe_load(f)
+try:
+    a = set(d['roles']['$1'].get('auto',[]) or [])
+    m = set(d['roles']['$1'].get('manual',[]) or [])
+    print(json.dumps(sorted(a|m), ensure_ascii=False))
+except: print(json.dumps([]))
+" 2>/dev/null
 }
 
-ROLE_MAP="pm:pm-agent
-qa:qa-agent
-coco:coco-agent
-wiki:wiki-agent"
+# 扫描 skill 目录（支持 category/skill 嵌套）
+scan_skills() {
+  local base="$1"
+  for d in "$base"/*/; do
+    [ -d "$d" ] || continue
+    local name=$(basename "$d")
+    [ -f "$d/SKILL.md" ] || [ -d "$d" ] || continue
+    # 是否有子 skill 目录
+    local has_sub=0
+    for sub in "$d"/*/; do
+      [ -d "$sub" ] && [ -f "$sub/SKILL.md" ] && { has_sub=1; break; }
+    done
+    if [ "$has_sub" -eq 1 ]; then
+      for sub in "$d"/*/; do
+        [ -d "$sub" ] || continue
+        local sname=$(basename "$sub")
+        echo "${name}/${sname}"
+      done
+    else
+      echo "$name"
+    fi
+  done | sort
+}
 
-PROFILE_DIRS=$(echo "$ROLE_MAP" | wc -l)
-echo "=== Deploy Skills — $(date '+%Y-%m-%d %H:%M:%S') ==="
-echo "源文件: $INDEX_FILE"
-echo "备份至: $BACKUP_DIR"
+echo "=========================================="
+echo " deploy-skills.sh — Skill 清理"
+echo "=========================================="
+echo ""
+echo "索引:    $INDEX_FILE"
+echo "备份:    $BACKUP_DIR"
+echo "模式:    $([ "$DRY_RUN" -eq 1 ] && echo 'DRY RUN' || echo '需确认后执行')"
 echo ""
 
-if [ "$DRY_RUN" -eq 1 ]; then
-  echo "▶ DRY RUN 模式 — 不会删除任何文件"
+TOTAL_DEL=0
+TOTAL_KEEP=0
+TO_DELETE=()
+
+for profile_dir in "$PROFILES_DIR"/*/; do
+  [ -d "$profile_dir" ] || continue
+  agent=$(basename "$profile_dir")
+  skills_dir="$profile_dir/skills"
+  [ -d "$skills_dir" ] || { echo "  $agent: 无 skills"; echo ""; continue; }
+
+  role="${agent%-agent}"
+  allowed=$(get_allowed "$role")
+  ac=$(echo "$allowed" | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null || echo 0)
+  an=$(echo "$allowed" | python3 -c "import sys,json; print(', '.join(json.load(sys.stdin)))" 2>/dev/null || echo 无)
+
+  echo "── $agent ($role) ──"
+  echo "  允许: $ac → $an"
   echo ""
-fi
 
-TOTAL_DELETED=0
-HAS_ERROR=0
-
-echo "$ROLE_MAP" | while IFS=: read -r role profile; do
-  SKILL_DIR="$SKILLS_BASE/$profile/skills"
-  ALLOWED=$(echo "$(parse_index)" | grep "^$role:" | cut -d: -f2-)
-
-  echo "── $role ($profile) ──"
-
-  if [ ! -d "$SKILL_DIR" ]; then
-    echo "  目录不存在: $SKILL_DIR (跳过)"
-    echo ""
-    return 0
-  fi
-
-  # 列出当前目录中的 skill
-  CURRENT=$(ls "$SKILL_DIR" 2>/dev/null || true)
-  if [ -z "$CURRENT" ]; then
-    echo "  skills 目录为空 (跳过)"
-    echo ""
-    return 0
-  fi
-
-  # 找出不在允许列表中的 skill
-  TO_DELETE=""
-  for skill in $CURRENT; do
-    # 跳过隐藏文件和脚本目录
-    [[ "$skill" == .* || "$skill" == "scripts" ]] && continue
-    if ! echo ",$ALLOWED," | grep -q ",$skill,"; then
-      TO_DELETE="$TO_DELETE $skill"
+  while IFS= read -r skill_path_name; do
+    [ -z "$skill_path_name" ] && continue
+    # 确定文件系统路径
+    if [[ "$skill_path_name" == */* ]]; then
+      fs_path="$skills_dir/$skill_path_name"
+    else
+      fs_path="$skills_dir/$skill_path_name"
     fi
-  done
+    # 叶子名用于匹配 allowed 列表
+    leaf="${skill_path_name##*/}"
 
-  if [ -z "$TO_DELETE" ]; then
-    echo "  无需清理"
-    echo ""
-    return 0
-  fi
+    is_ok=$(echo "$allowed" | python3 -c "
+import sys,json
+a=set(json.load(sys.stdin))
+print('yes' if '$leaf' in a else 'no')
+" 2>/dev/null)
 
-  echo "  允许: $ALLOWED"
-  echo "  待清理:"
-  for skill in $TO_DELETE; do
-    SIZE=$(du -sh "$SKILL_DIR/$skill" 2>/dev/null | cut -f1 || echo "?")
-    echo "    - $skill ($SIZE)"
-  done
-
-  # dry-run 模式下只列出
-  if [ "$DRY_RUN" -eq 1 ]; then
-    echo "  (dry-run, 未执行)"
-  else
-    # 备份
-    mkdir -p "$BACKUP_DIR/$profile"
-    for skill in $TO_DELETE; do
-      cp -r "$SKILL_DIR/$skill" "$BACKUP_DIR/$profile/" 2>/dev/null || true
-      rm -rf "$SKILL_DIR/$skill"
-      echo "  ✅ 已删除: $skill"
-    done
-  fi
+    if [ "$is_ok" = "yes" ]; then
+      echo "    OK  $skill_path_name"
+      TOTAL_KEEP=$((TOTAL_KEEP + 1))
+    else
+      echo "    DEL $skill_path_name"
+      echo "        → $BACKUP_DIR/${agent}/${skill_path_name}"
+      TOTAL_DEL=$((TOTAL_DEL + 1))
+      TO_DELETE+=("${agent}:${skill_path_name}:${fs_path}")
+    fi
+  done < <(scan_skills "$skills_dir")
   echo ""
 done
 
-echo "=== 完成 ==="
+echo "=========================================="
+echo " 汇总: 保留 $TOTAL_KEEP / 删除 $TOTAL_DEL"
+echo ""
+
+[ "$TOTAL_DEL" -eq 0 ] && { echo "无需清理"; exit 0; }
+
 if [ "$DRY_RUN" -eq 1 ]; then
-  echo "运行 $0（无 --dry-run）执行实际清理"
-  echo "备份位于: \$HOME/.hermes/skills-backup-<日期>"
-else
-  echo "✅ 清理完成。备份位于: $BACKUP_DIR"
-  echo "恢复命令: $0 --restore $BACKUP_DIR"
+  echo "DRY RUN — 人工审批后执行: bash $0"
+  echo "备份路径: $BACKUP_DIR"
+  exit 0
 fi
+
+read -r -p "确认删除 $TOTAL_DEL 个? (y/N): " CONFIRM
+[ "$CONFIRM" != "y" ] && [ "$CONFIRM" != "Y" ] && { echo "取消"; exit 0; }
+
+echo ""
+for entry in "${TO_DELETE[@]}"; do
+  IFS=':' read -r ag sk fp <<< "$entry"
+  target="$BACKUP_DIR/${ag}/${sk}"
+  echo "  cp $fp → $target"
+  mkdir -p "$(dirname "$target")"
+  cp -r "$fp" "$target"
+  rm -rf "$fp"
+done
+
+echo ""
+echo "完成。备份: $BACKUP_DIR"
