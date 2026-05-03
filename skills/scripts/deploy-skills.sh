@@ -24,7 +24,13 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --dry-run) DRY_RUN=1; shift ;;
     --index) INDEX_FILE="$2"; shift 2 ;;
-    *) echo "未知参数: $1"; exit 1 ;;
+    --add-skill)
+      SKILL_NAME="$2"
+      shift 2
+      echo "→ 代理到 deploy-skill.sh --add --skill $SKILL_NAME --apply"
+      exec bash "$SCRIPT_DIR/deploy-skill.sh" --add --skill "$SKILL_NAME" --apply
+      ;;
+    *) echo "未知参数: $1"; echo "用法: $0 [--dry-run] [--index path] [--add-skill name]"; exit 1 ;;
   esac
 done
 
