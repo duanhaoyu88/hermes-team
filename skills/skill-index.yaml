@@ -1,0 +1,49 @@
+# Skill Index — 角色→skill 分配表
+# 自动生成于 2026-05-03T06:37:25Z
+# 源文件: /mnt/f/03_Github/hermes-team/skills/scripts/../skill-map.yaml
+# 勿手动编辑。修改 skill-map.yaml 后重新运行 generate-index.sh
+schema_version: "1.0"
+generated_by: generate-index.sh
+
+roles:
+  coco:
+    auto:
+      - hermes-agent-comms
+      - test-driven-development
+    manual:
+      - systematic-debugging
+      - requesting-code-review
+      - github-pr-workflow
+      - github-code-review
+      - github-issues
+      - github-repo-management
+      - codebase-inspection
+      - bypass-profile-path-resolution
+      - github-auth
+    never:
+  pm:
+    auto:
+      - hermes-agent-comms
+      - plan
+    manual:
+      - design-doc-review
+      - github-issues
+      - github-repo-management
+      - codebase-inspection
+    never:
+  qa:
+    auto:
+      - hermes-agent-comms
+      - qa-acceptance-review
+    manual:
+      - design-doc-review
+      - systematic-debugging
+    never:
+  wiki:
+    auto:
+      - hermes-agent-comms
+      - llm-wiki
+      - wechat-dual-agent-routing
+      - obsidian
+    manual:
+    never:
