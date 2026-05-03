@@ -58,6 +58,26 @@ skills:
     roles: [coco]
 
   # ── Coco ──
+  - name: harness-creator
+    version: ">=1.0"
+    source: hermes-governance
+    required: true
+    load: auto
+    when: "创建/初始化项目 Harness 时自动加载"
+    description: "Harness 创建器 — AGENTS.md/feature_list.json/progress.md/init.sh 四文件生成与初始化"
+    tags: [harness, project-setup, coco-core]
+    roles: [coco]
+
+  - name: karpathy-guidelines
+    version: ">=1.0"
+    source: hermes-governance
+    required: true
+    load: auto
+    when: "编码前自动加载"
+    description: "Karpathy 编码行为准则 — 先思考再编码、简洁优先、外科手术式修改、目标驱动"
+    tags: [coding-guidelines, behavioral, coco-core]
+    roles: [coco]
+
   - name: test-driven-development
     version: ">=1.0"
     source: hermes-governance

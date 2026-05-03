@@ -37,12 +37,21 @@ get_profiles_dir() {
 
 find_source() {
   local name="$1"
-  # 1. hermes-team/skills/<name>/ 目录
-  if [ -d "$SKILLS_DIR/$name" ] && [ -f "$SKILLS_DIR/$name/SKILL.md" ]; then
-    echo "$SKILLS_DIR/$name"
+  # 1. hermes-team/skills/*/<name>/ 目录（per-agent 源）
+  for rd in "$SKILLS_DIR"/*/; do
+    [ -d "$rd" ] || continue
+    if [ -d "${rd}${name}" ] && [ -f "${rd}${name}/SKILL.md" ]; then
+      echo "${rd}${name}"
+      return
+    fi
+  done
+  # 2. 系统 skills 目录 /home/duanhaoyu/.hermes/skills/<name>/
+  local sys_skills="/home/duanhaoyu/.hermes/skills"
+  if [ -d "$sys_skills/$name" ] && [ -f "$sys_skills/$name/SKILL.md" ]; then
+    echo "$sys_skills/$name"
     return
   fi
-  # 2. 扫描 agent profiles 找已有副本
+  # 3. 扫描 agent profiles 找已有副本
   local profiles
   profiles=$(get_profiles_dir)
   for pd in "$profiles"/*/; do
