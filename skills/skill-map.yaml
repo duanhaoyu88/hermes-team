@@ -1,203 +1,248 @@
-# Skill Map — Hermes Agent 技能映射表
-# 唯一源。PM 维护。skill-index.yaml 由此自动生成。
-schema_version: "1.0"
-last_updated: "2026-05-03"
+schema_version: '1.0'
+last_updated: '2026-05-03'
 maintainer: pm-agent
-
 skills:
-  # ── 通用通信（所有 agent 必需）──
-  - name: hermes-agent-comms
-    version: ">=1.0"
-    source: hermes-governance
-    required: true
-    load: auto
-    when: "启动时自动加载"
-    description: "Hermes Agent 间通信协议 — tmux send-keys/capture-pane/status 文件"
-    tags: [communication, protocol, tmux]
-    roles: [pm, qa, coco, wiki]
-
-  # ── QA ──
-  - name: qa-acceptance-review
-    version: ">=1.0"
-    source: hermes-governance
-    required: true
-    load: auto
-    when: "审查任务时自动加载"
-    description: "验收标准驱动的结构化审查方法论 — 逐条验收/发现记录/增量审查"
-    tags: [qa, review, acceptance]
-    roles: [qa]
-
-  - name: design-doc-review
-    version: ">=1.0"
-    source: hermes-governance
-    required: true
-    load: manual
-    when: "收到设计文档审查任务时加载"
-    description: "架构设计文档审查 — 五层影响分析/风险/验收标准"
-    tags: [design, review, architecture]
-    roles: [qa, pm]
-
-  - name: systematic-debugging
-    version: ">=1.0"
-    source: hermes-governance
-    required: true
-    load: manual
-    when: "遇到 bug 或异常行为时加载"
-    description: "系统性调试方法论 — 根因分析/二分法/日志追踪"
-    tags: [debug, troubleshooting]
-    roles: [qa, coco]
-
-  - name: requesting-code-review
-    version: ">=1.0"
-    source: hermes-governance
-    required: false
-    load: manual
-    when: "提交代码审查前自查"
-    description: "提交前自查清单 — 安全检查/代码规范/文档完整性"
-    tags: [code-review, checklist]
-    roles: [coco]
-
-  # ── Coco ──
-  - name: harness-creator
-    version: ">=1.0"
-    source: hermes-governance
-    required: true
-    load: auto
-    when: "创建/初始化项目 Harness 时自动加载"
-    description: "Harness 创建器 — AGENTS.md/feature_list.json/progress.md/init.sh 四文件生成与初始化"
-    tags: [harness, project-setup, coco-core]
-    roles: [coco]
-
-  - name: karpathy-guidelines
-    version: ">=1.0"
-    source: hermes-governance
-    required: true
-    load: auto
-    when: "编码前自动加载"
-    description: "Karpathy 编码行为准则 — 先思考再编码、简洁优先、外科手术式修改、目标驱动"
-    tags: [coding-guidelines, behavioral, coco-core]
-    roles: [coco]
-
-  - name: test-driven-development
-    version: ">=1.0"
-    source: hermes-governance
-    required: true
-    load: auto
-    when: "编码前自动加载"
-    description: "测试驱动开发 — 先跑基线测试/写测试/实现/验证"
-    tags: [tdd, testing]
-    roles: [coco]
-
-  - name: github-pr-workflow
-    version: ">=1.0"
-    source: hermes-governance
-    required: true
-    load: manual
-    when: "提交 PR 时加载"
-    description: "PR 工作流 — 创建分支/提交/PR/审后修改"
-    tags: [github, pr]
-    roles: [coco]
-
-  - name: github-code-review
-    version: ">=1.0"
-    source: hermes-governance
-    required: true
-    load: manual
-    when: "自查 diff 时加载"
-    description: "代码审查 — diff 分析/行级评论/安全检查"
-    tags: [github, code-review]
-    roles: [coco]
-
-  - name: github-issues
-    version: ">=1.0"
-    source: hermes-governance
-    required: true
-    load: manual
-    when: "操作 Issue 时加载"
-    description: "Issue 管理 — 创建/列表/更新/label 操作"
-    tags: [github, issues]
-    roles: [coco, pm]
-
-  - name: github-repo-management
-    version: ">=1.0"
-    source: hermes-governance
-    required: true
-    load: manual
-    when: "进新项目时加载"
-    description: "仓库管理 — clone/fork/配置/初始化"
-    tags: [github, repo]
-    roles: [coco, pm]
-
-  - name: codebase-inspection
-    version: ">=1.0"
-    source: hermes-governance
-    required: true
-    load: manual
-    when: "首次进项目时加载"
-    description: "代码库探查 — 结构分析/LOC 统计/依赖扫描"
-    tags: [codebase, inspection]
-    roles: [coco, pm]
-
-  # ── Coco 一次性配置（manual，不用每次 session 加载）──
-  - name: bypass-profile-path-resolution
-    version: ">=1.0"
-    source: hermes-governance
-    required: true
-    load: manual
-    when: "首次配置环境时按需加载"
-    description: "路径解析兜底 — 处理 WSL 跨文件系统路径问题"
-    tags: [path, infra]
-    roles: [coco]
-
-  - name: github-auth
-    version: ">=1.0"
-    source: hermes-governance
-    required: true
-    load: manual
-    when: "首次配置 git 认证时按需加载"
-    description: "GitHub 认证 — token 管理/ssh 配置/credential helper"
-    tags: [github, auth]
-    roles: [coco]
-
-  # ── Wiki ──
-  - name: llm-wiki
-    version: ">=1.0"
-    source: hermes-governance
-    required: true
-    load: auto
-    when: "启动时自动加载"
-    description: "Karpathy 模式知识库管理 — 入库/查询/lint/轮转"
-    tags: [knowledge-base, wiki, ingestion, lint]
-    roles: [wiki]
-    knowledge_ref: concepts/hermes-skills-system.md
-
-  - name: wechat-dual-agent-routing
-    version: ">=1.0"
-    source: hermes-governance
-    required: true
-    load: auto
-    when: "启动时自动加载"
-    description: "微信双 Agent 路由 — 用户消息路由到对应 agent"
-    tags: [wechat, routing]
-    roles: [wiki]
-
-  - name: obsidian
-    version: ">=1.0"
-    source: hermes-governance
-    required: false
-    load: auto
-    when: "操作 Obsidian 时加载"
-    description: "Obsidian 专用工具 — 创建/读取笔记/管理 vault"
-    tags: [obsidian, notes]
-    roles: [wiki]
-
-  # ── PM ──
-  - name: plan
-    version: ">=1.0"
-    source: hermes-governance
-    required: true
-    load: auto
-    when: "启动时自动加载"
-    description: "架构规划 — 上下文审查/设计方案编写/多 agent 任务规划"
-    tags: [plan, architecture]
-    roles: [pm]
+- name: hermes-agent-comms
+  version: '>=1.0'
+  source: hermes-team
+  required: true
+  load: auto
+  when: 启动时自动加载
+  description: Hermes Agent 间通信协议 — tmux send-keys/capture-pane/status 文件
+  tags:
+  - communication
+  - protocol
+  - tmux
+  roles:
+  - pm
+  - qa
+  - coco
+  - wiki
+- name: qa-acceptance-review
+  version: '>=1.0'
+  source: hermes-team
+  required: true
+  load: auto
+  when: 审查任务时自动加载
+  description: 验收标准驱动的结构化审查方法论 — 逐条验收/发现记录/增量审查
+  tags:
+  - qa
+  - review
+  - acceptance
+  roles:
+  - qa
+- name: design-doc-review
+  version: '>=1.0'
+  source: hermes-team
+  required: true
+  load: manual
+  when: 收到设计文档审查任务时加载
+  description: 架构设计文档审查 — 五层影响分析/风险/验收标准
+  tags:
+  - design
+  - review
+  - architecture
+  roles:
+  - qa
+  - pm
+- name: systematic-debugging
+  version: '>=1.0'
+  source: hermes-team
+  required: true
+  load: manual
+  when: 遇到 bug 或异常行为时加载
+  description: 系统性调试方法论 — 根因分析/二分法/日志追踪
+  tags:
+  - debug
+  - troubleshooting
+  roles:
+  - qa
+  - coco
+- name: requesting-code-review
+  version: '>=1.0'
+  source: hermes-team
+  required: false
+  load: manual
+  when: 提交代码审查前自查
+  description: 提交前自查清单 — 安全检查/代码规范/文档完整性
+  tags:
+  - code-review
+  - checklist
+  roles:
+  - coco
+- name: harness-creator
+  version: '>=1.0'
+  source: hermes-team
+  required: true
+  load: auto
+  when: 创建/初始化项目 Harness 时自动加载
+  description: Harness 创建器 — AGENTS.md/feature_list.json/progress.md/init.sh 四文件生成与初始化
+  tags:
+  - harness
+  - project-setup
+  - coco-core
+  roles:
+  - coco
+- name: karpathy-guidelines
+  version: '>=1.0'
+  source: hermes-team
+  required: true
+  load: auto
+  when: 编码前自动加载
+  description: Karpathy 编码行为准则 — 先思考再编码、简洁优先、外科手术式修改、目标驱动
+  tags:
+  - coding-guidelines
+  - behavioral
+  - coco-core
+  roles:
+  - coco
+- name: test-driven-development
+  version: '>=1.0'
+  source: hermes-team
+  required: true
+  load: auto
+  when: 编码前自动加载
+  description: 测试驱动开发 — 先跑基线测试/写测试/实现/验证
+  tags:
+  - tdd
+  - testing
+  roles:
+  - coco
+- name: github-pr-workflow
+  version: '>=1.0'
+  source: hermes-team
+  required: true
+  load: manual
+  when: 提交 PR 时加载
+  description: PR 工作流 — 创建分支/提交/PR/审后修改
+  tags:
+  - github
+  - pr
+  roles:
+  - coco
+- name: github-code-review
+  version: '>=1.0'
+  source: hermes-team
+  required: true
+  load: manual
+  when: 自查 diff 时加载
+  description: 代码审查 — diff 分析/行级评论/安全检查
+  tags:
+  - github
+  - code-review
+  roles:
+  - coco
+- name: github-issues
+  version: '>=1.0'
+  source: hermes-team
+  required: true
+  load: manual
+  when: 操作 Issue 时加载
+  description: Issue 管理 — 创建/列表/更新/label 操作
+  tags:
+  - github
+  - issues
+  roles:
+  - coco
+  - pm
+- name: github-repo-management
+  version: '>=1.0'
+  source: hermes-team
+  required: true
+  load: manual
+  when: 进新项目时加载
+  description: 仓库管理 — clone/fork/配置/初始化
+  tags:
+  - github
+  - repo
+  roles:
+  - coco
+  - pm
+- name: codebase-inspection
+  version: '>=1.0'
+  source: hermes-team
+  required: true
+  load: manual
+  when: 首次进项目时加载
+  description: 代码库探查 — 结构分析/LOC 统计/依赖扫描
+  tags:
+  - codebase
+  - inspection
+  roles:
+  - coco
+  - pm
+- name: bypass-profile-path-resolution
+  version: '>=1.0'
+  source: hermes-team
+  required: true
+  load: manual
+  when: 首次配置环境时按需加载
+  description: 路径解析兜底 — 处理 WSL 跨文件系统路径问题
+  tags:
+  - path
+  - infra
+  roles:
+  - coco
+- name: github-auth
+  version: '>=1.0'
+  source: hermes-team
+  required: true
+  load: manual
+  when: 首次配置 git 认证时按需加载
+  description: GitHub 认证 — token 管理/ssh 配置/credential helper
+  tags:
+  - github
+  - auth
+  roles:
+  - coco
+- name: llm-wiki
+  version: '>=1.0'
+  source: hermes-team
+  required: true
+  load: auto
+  when: 启动时自动加载
+  description: Karpathy 模式知识库管理 — 入库/查询/lint/轮转
+  tags:
+  - knowledge-base
+  - wiki
+  - ingestion
+  - lint
+  roles:
+  - wiki
+  knowledge_ref: concepts/hermes-skills-system.md
+- name: wechat-dual-agent-routing
+  version: '>=1.0'
+  source: hermes-team
+  required: true
+  load: auto
+  when: 启动时自动加载
+  description: 微信双 Agent 路由 — 用户消息路由到对应 agent
+  tags:
+  - wechat
+  - routing
+  roles:
+  - wiki
+- name: obsidian
+  version: '>=1.0'
+  source: hermes-team
+  required: false
+  load: auto
+  when: 操作 Obsidian 时加载
+  description: Obsidian 专用工具 — 创建/读取笔记/管理 vault
+  tags:
+  - obsidian
+  - notes
+  roles:
+  - wiki
+- name: plan
+  version: '>=1.0'
+  source: hermes-team
+  required: true
+  load: auto
+  when: 启动时自动加载
+  description: 架构规划 — 上下文审查/设计方案编写/多 agent 任务规划
+  tags:
+  - plan
+  - architecture
+  roles:
+  - pm
