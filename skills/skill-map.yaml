@@ -5,6 +5,17 @@ last_updated: 2026-05-03
 maintainer: pm-agent
 
 skills:
+  # ── 通用通信（所有 agent 必需）──
+  - name: hermes-agent-comms
+    version: ">=1.0"
+    source: hermes-governance
+    required: true
+    load: auto
+    when: "启动时自动加载"
+    description: "Hermes Agent 间通信协议 — tmux send-keys/capture-pane/status 文件"
+    tags: [communication, protocol, tmux]
+    roles: [pm, qa, coco, wiki]
+
   # ── QA ──
   - name: qa-acceptance-review
     version: ">=1.0"
@@ -15,9 +26,7 @@ skills:
     description: "验收标准驱动的结构化审查方法论 — 逐条验收/发现记录/增量审查"
     tags: [qa, review, acceptance]
     roles: [qa]
-    consumers: [qa-agent]
 
-  # ── 通用 ──
   - name: design-doc-review
     version: ">=1.0"
     source: hermes-governance
@@ -27,7 +36,6 @@ skills:
     description: "架构设计文档审查 — 五层影响分析/风险/验收标准"
     tags: [design, review, architecture]
     roles: [qa, pm]
-    consumers: [qa-agent, pm-agent]
 
   - name: systematic-debugging
     version: ">=1.0"
@@ -38,7 +46,6 @@ skills:
     description: "系统性调试方法论 — 根因分析/二分法/日志追踪"
     tags: [debug, troubleshooting]
     roles: [qa, coco]
-    consumers: [qa-agent, coco-agent]
 
   - name: requesting-code-review
     version: ">=1.0"
@@ -49,7 +56,6 @@ skills:
     description: "提交前自查清单 — 安全检查/代码规范/文档完整性"
     tags: [code-review, checklist]
     roles: [qa, coco]
-    consumers: [qa-agent, coco-agent]
 
   # ── Coco ──
   - name: test-driven-development
@@ -61,29 +67,6 @@ skills:
     description: "测试驱动开发 — 先跑基线测试/写测试/实现/验证"
     tags: [tdd, testing]
     roles: [coco]
-    consumers: [coco-agent]
-
-  - name: bypass-profile-path-resolution
-    version: ">=1.0"
-    source: hermes-governance
-    required: true
-    load: auto
-    when: "路径解析时默认启用"
-    description: "路径解析兜底 — 处理 WSL 跨文件系统路径问题"
-    tags: [path, infra]
-    roles: [coco]
-    consumers: [coco-agent]
-
-  - name: github-auth
-    version: ">=1.0"
-    source: hermes-governance
-    required: true
-    load: auto
-    when: "git 操作前自动加载"
-    description: "GitHub 认证 — token 管理/ssh 配置/credential helper"
-    tags: [github, auth]
-    roles: [coco]
-    consumers: [coco-agent]
 
   - name: github-pr-workflow
     version: ">=1.0"
@@ -94,7 +77,6 @@ skills:
     description: "PR 工作流 — 创建分支/提交/PR/审后修改"
     tags: [github, pr]
     roles: [coco]
-    consumers: [coco-agent]
 
   - name: github-code-review
     version: ">=1.0"
@@ -105,7 +87,6 @@ skills:
     description: "代码审查 — diff 分析/行级评论/安全检查"
     tags: [github, code-review]
     roles: [coco]
-    consumers: [coco-agent]
 
   - name: github-issues
     version: ">=1.0"
@@ -115,8 +96,7 @@ skills:
     when: "操作 Issue 时加载"
     description: "Issue 管理 — 创建/列表/更新/label 操作"
     tags: [github, issues]
-    roles: [coco]
-    consumers: [coco-agent]
+    roles: [coco, pm]
 
   - name: github-repo-management
     version: ">=1.0"
@@ -126,8 +106,7 @@ skills:
     when: "进新项目时加载"
     description: "仓库管理 — clone/fork/配置/初始化"
     tags: [github, repo]
-    roles: [coco]
-    consumers: [coco-agent]
+    roles: [coco, pm]
 
   - name: codebase-inspection
     version: ">=1.0"
@@ -137,8 +116,28 @@ skills:
     when: "首次进项目时加载"
     description: "代码库探查 — 结构分析/LOC 统计/依赖扫描"
     tags: [codebase, inspection]
+    roles: [coco, pm]
+
+  # ── Coco 一次性配置（manual，不用每次 session 加载）──
+  - name: bypass-profile-path-resolution
+    version: ">=1.0"
+    source: hermes-governance
+    required: true
+    load: manual
+    when: "首次配置环境时按需加载"
+    description: "路径解析兜底 — 处理 WSL 跨文件系统路径问题"
+    tags: [path, infra]
     roles: [coco]
-    consumers: [coco-agent]
+
+  - name: github-auth
+    version: ">=1.0"
+    source: hermes-governance
+    required: true
+    load: manual
+    when: "首次配置 git 认证时按需加载"
+    description: "GitHub 认证 — token 管理/ssh 配置/credential helper"
+    tags: [github, auth]
+    roles: [coco]
 
   # ── Wiki ──
   - name: llm-wiki
@@ -150,7 +149,6 @@ skills:
     description: "Karpathy 模式知识库管理 — 入库/查询/lint/轮转"
     tags: [knowledge-base, wiki, ingestion, lint]
     roles: [wiki]
-    consumers: [wiki-agent]
     knowledge_ref: concepts/hermes-skills-system.md
 
   - name: wechat-dual-agent-routing
@@ -162,7 +160,6 @@ skills:
     description: "微信双 Agent 路由 — 用户消息路由到对应 agent"
     tags: [wechat, routing]
     roles: [wiki]
-    consumers: [wiki-agent]
 
   - name: obsidian
     version: ">=1.0"
@@ -173,7 +170,6 @@ skills:
     description: "Obsidian 专用工具 — 创建/读取笔记/管理 vault"
     tags: [obsidian, notes]
     roles: [wiki]
-    consumers: [wiki-agent]
 
   # ── PM ──
   - name: plan
@@ -185,27 +181,3 @@ skills:
     description: "架构规划 — 上下文审查/设计方案编写/多 agent 任务规划"
     tags: [plan, architecture]
     roles: [pm]
-    consumers: [pm-agent]
-
-  # ── 权限红线（never 加载）──
-  - name: writing-plans
-    version: ">=1.0"
-    source: hermes-governance
-    required: false
-    load: never
-    when: ""
-    description: "设计文档编写（SOUL 禁止 — 仅小艾可用）"
-    tags: [plan, restricted]
-    roles: [coco]
-    consumers: []
-
-  - name: subagent-driven-development
-    version: ">=1.0"
-    source: hermes-governance
-    required: false
-    load: never
-    when: ""
-    description: "子 Agent 驱动开发（SOUL 禁止 — 仅小艾可用）"
-    tags: [delegation, restricted]
-    roles: [coco]
-    consumers: []
